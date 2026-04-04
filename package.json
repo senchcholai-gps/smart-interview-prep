@@ -26,7 +26,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "start:backend": "node server/server.js",
+    "dev": "concurrently \"npm run start:backend\" \"npm start\""
   },
   "eslintConfig": {
     "extends": [
@@ -48,6 +50,7 @@
   "devDependencies": {
     "@types/react-router-dom": "^5.3.3",
     "@types/react-speech-recognition": "^3.9.6",
-    "@types/react-webcam": "^1.1.0"
+    "@types/react-webcam": "^1.1.0",
+    "concurrently": "^9.1.2"
   }
 }

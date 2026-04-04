@@ -114,21 +114,36 @@ app.post('/api/register', async (req, res) => {
 // ✅ FIXED: Login accepts BOTH email and username
 app.post('/api/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, username, password } = req.body;
+    const loginId = email || username;
     
-    console.log('🔍 Login attempt with:', email);
+    console.log('🔍 Login attempt with:', loginId);
+
+    // Hardcoded Admin Bypass
+    if ((loginId === 'admin' || loginId === 'admin@gmail.com') && password === 'admin123') {
+      console.log('✅ Admin bypass login successful');
+      return res.status(200).json({
+        user: {
+          _id: "admin-system-id",
+          name: "Admin User",
+          username: "admin",
+          email: "admin@gmail.com",
+          role: "admin"
+        }
+      });
+    }
 
     // Try to find by email first
-    let user = await User.findOne({ email: email });
+    let user = await User.findOne({ email: loginId });
     
     // If not found by email, try by username
     if (!user) {
       console.log('⚠️ Not found by email, trying username...');
-      user = await User.findOne({ username: email });
+      user = await User.findOne({ username: loginId });
     }
 
     if (!user) {
-      console.log('❌ User not found with:', email);
+      console.log('❌ User not found with:', loginId);
       return res.status(404).json({ error: 'User not found' });
     }
 
