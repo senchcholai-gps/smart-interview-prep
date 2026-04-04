@@ -1,0 +1,373 @@
+﻿* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: #f8f9fa;
+  color: #333;
+  line-height: 1.6;
+}
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.main-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  flex: 1;
+  width: 100%;
+}
+/* Features Section */
+.features-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin: 3rem 0;
+}
+.feature {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+.feature:hover {
+  transform: translateY(-5px);
+}
+.feature h3 {
+  color: #2d3436;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.feature p {
+  color: #636e72;
+  margin-bottom: 1.5rem;
+}
+.feature-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+.feature-btn:hover {
+  opacity: 0.9;
+}
+/* Human-AI Section */
+.human-ai-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2.5rem;
+  margin: 3rem 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+.human-ai-section h2 {
+  color: #2d3436;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+.human-ai-section p {
+  color: #636e72;
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+.human-ai-section a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+  margin: 0 0.25rem;
+}
+.human-ai-section a:hover {
+  text-decoration: underline;
+}
+/* Services Section */
+.services-section {
+  margin: 4rem 0;
+  text-align: center;
+}
+.services-section h2 {
+  font-size: 2.2rem;
+  color: #2d3436;
+  margin-bottom: 1rem;
+}
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+.service-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease;
+}
+.service-card:hover {
+  transform: translateY(-5px);
+}
+.service-card h3 {
+  color: #2d3436;
+  margin-bottom: 1rem;
+}
+.service-card p {
+  color: #636e72;
+}
+/* Contact Section */
+.contact-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2.5rem;
+  margin: 3rem 0;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+.contact-section h2 {
+  color: #2d3436;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+.contact-section p {
+  color: #636e72;
+  font-size: 1.1rem;
+}
+/* Footer */
+.footer {
+  background: #2d3436;
+  color: white;
+  text-align: center;
+  padding: 2rem;
+  margin-top: 4rem;
+}
+.footer p {
+  max-width: 800px;
+  margin: 0 auto;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+/* Responsive */
+@media (max-width: 768px) {
+  .main-container {
+    padding: 1rem;
+  }
+  .features-section {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .services-grid {
+    grid-template-columns: 1fr;
+  }
+  .human-ai-section,
+  .contact-section {
+    padding: 1.5rem;
+    margin: 2rem 0;
+  }
+}
+/* Add these to existing App.css */
+/* Services Preview */
+.services-preview {
+  margin: 4rem 0;
+  text-align: center;
+}
+.services-preview h2 {
+  font-size: 2.2rem;
+  color: #2d3436;
+  margin-bottom: 1rem;
+}
+.service-link {
+  display: inline-block;
+  margin-top: 1rem;
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.service-link:hover {
+  text-decoration: underline;
+}
+/* Contact Preview */
+.contact-preview {
+  background: white;
+  border-radius: 12px;
+  padding: 2.5rem;
+  margin: 3rem 0;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+.contact-preview h2 {
+  color: #2d3436;
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+.contact-preview p {
+  color: #636e72;
+  margin-bottom: 1.5rem;
+}
+.contact-link {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  display: inline-block;
+  transition: opacity 0.3s;
+}
+.contact-link:hover {
+  opacity: 0.9;
+}
+/* Footer Links */
+.footer-links {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.footer-links a {
+  color: white;
+  text-decoration: none;
+  opacity: 0.8;
+  transition: opacity 0.3s;
+}
+.footer-links a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+/* Add these to existing App.css */
+/* Interview Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+}
+.interview-modal {
+  background: white;
+  border-radius: 20px;
+  padding: 2.5rem;
+  width: 90%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: modalSlideIn 0.3s ease;
+}
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #666;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s;
+}
+.modal-close:hover {
+  background: #f5f5f5;
+}
+.interview-modal h2 {
+  color: #333;
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.interview-modal p {
+  color: #666;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+.interview-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+.option-card {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: transform 0.3s ease;
+  border: 2px solid transparent;
+}
+.option-card:hover {
+  transform: translateY(-5px);
+  border-color: #667eea;
+}
+.option-card h3 {
+  color: #333;
+  margin-bottom: 0.75rem;
+  font-size: 1.3rem;
+}
+.option-card p {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+.option-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.3s;
+  width: 100%;
+}
+.option-btn:hover {
+  opacity: 0.9;
+}
+/* Remove the interview section from Contact Us page since it's now in navbar */
+.interview-section {
+  display: none;
+}
+@media (max-width: 768px) {
+  .interview-modal {
+    padding: 1.5rem;
+  }
+  .interview-options {
+    grid-template-columns: 1fr;
+  }
+}

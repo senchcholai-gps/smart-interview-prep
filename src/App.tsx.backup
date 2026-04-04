@@ -1,0 +1,896 @@
+﻿import React, { useState, useEffect } from "react";
+import JobProfileCreation from "./components/job-profile/JobProfileCreation";
+import Dashboard from "./components/dashboard/Dashboard";
+import InterviewSession from "./components/interview/InterviewSession";
+interface User {
+  username: string;
+  email: string;
+  phoneNumber: string;
+  password: string;
+  confirmPassword: string;
+  twelfthPercentage: string;
+  ugCollege: string;
+  ugCourse: string;
+  ugCGPA: number;
+  pgCollege?: string;
+  pgCourse?: string;
+  pgCGPA?: number;
+  createdAt: string;
+}
+const ugCourseOptions = [
+  "B.Tech Computer Science", "B.Tech Information Technology", "B.E Computer Science",
+  "B.E Information Technology", "B.Sc Computer Science", "B.Sc Information Technology",
+  "BCA", "B.Com", "BBA", "BA Economics", "BA English", "Other"
+];
+const pgCourseOptions = [
+  "M.Tech Computer Science", "M.Tech Information Technology", "M.E Computer Science",
+  "M.Sc Computer Science", "MCA", "MBA", "M.Com", "MA Economics", "Other"
+];
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [showJobProfileCreation, setShowJobProfileCreation] = useState(false);
+  const [showInterviewSession, setShowInterviewSession] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<any>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showSignupModal, setShowSignupModal] = useState(false);
+  const [showPGSection, setShowPGSection] = useState(false);
+  const [currentPage, setCurrentPage] = useState('home');
+  const [justSignedUp, setJustSignedUp] = useState(false);
+  useEffect(() => {
+    const userStr = localStorage.getItem("currentUser");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+    }
+  }, []);
+  const handleTakeInterview = () => {
+    if (isAuthenticated) {
+      setShowJobProfileCreation(true);
+    } else {
+      alert("Please login first");
+      setShowLoginModal(true);
+    }
+  };
+  const handleJobProfileSubmit = (jobProfile: any) => {
+    const username = currentUser?.username;
+    if (!username) {
+      alert("User not found. Please login again.");
+      return;
+    }
+    const profileKey = `jobProfiles_${username}`;
+    const existingProfiles = JSON.parse(localStorage.getItem(profileKey) || '[]');
+    const newProfile = {
+      ...jobProfile,
+      id: `job_${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      createdBy: username
+    };
+    existingProfiles.push(newProfile);
+    localStorage.setItem(profileKey, JSON.stringify(existingProfiles));
+    alert("✅ Job profile created successfully!");
+    setShowJobProfileCreation(false);
+  };
+  const handleStartInterview = (jobProfile: any) => {
+    setSelectedProfile(jobProfile);
+    setShowInterviewSession(true);
+  };
+  const handleEndInterview = () => {
+    setShowInterviewSession(false);
+    setSelectedProfile(null);
+  };
+  const handleSignup = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const username = formData.get('username') as string;
+    const email = formData.get('email') as string;
+    const phoneNumber = formData.get('phoneNumber') as string;
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+    const twelfthPercentage = formData.get('twelfthPercentage') as string;
+    const ugCollege = formData.get('ugCollege') as string;
+    const ugCourse = formData.get('ugCourse') as string;
+    const ugCGPA = parseFloat(formData.get('ugCGPA') as string);
+    const pgCollege = formData.get('pgCollege') as string;
+    const pgCourse = formData.get('pgCourse') as string;
+    const pgCGPA = formData.get('pgCGPA') ? parseFloat(formData.get('pgCGPA') as string) : undefined;
+    if (password !== confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+    if (password.length < 6) {
+      alert("Password must be at least 6 characters long!");
+      return;
+    }
+    if (!phoneNumber.match(/^\d{10}$/)) {
+      alert("Please enter a valid 10-digit phone number!");
+      return;
+    }
+    if (ugCGPA < 0 || ugCGPA > 10) {
+      alert("UG CGPA must be between 0 and 10");
+      return;
+    }
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    if (users.some((u: User) => u.username === username || u.email === email)) {
+      alert("Username or email already exists!");
+      return;
+    }
+    const newUser: User = {
+      username,
+      email,
+      phoneNumber,
+      password,
+      confirmPassword,
+      twelfthPercentage,
+      ugCollege,
+      ugCourse,
+      ugCGPA,
+      ...(showPGSection && pgCollege && pgCourse && pgCGPA ? {
+        pgCollege,
+        pgCourse,
+        pgCGPA
+      } : {}),
+      createdAt: new Date().toISOString()
+    };
+    users.push(newUser);
+    localStorage.setItem('users', JSON.stringify(users));
+    setShowSignupModal(false);
+    setShowPGSection(false);
+    setJustSignedUp(true);
+    e.currentTarget.reset();
+    alert(`Account created successfully! Please login to continue.`);
+  };
+  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const username = formData.get('username') as string;
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+    if (password !== confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const user = users.find((u: User) => 
+      (u.username === username || u.email === username) && u.password === password
+    );
+    if (user) {
+      localStorage.setItem('currentUser', JSON.stringify(user));
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+      setShowLoginModal(false);
+      setJustSignedUp(false);
+      setCurrentPage('home');
+      e.currentTarget.reset();
+      alert(`Welcome back, ${user.username}!`);
+    } else {
+      alert("Invalid username/email or password!");
+    }
+  };
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    setCurrentUser(null);
+    setIsAuthenticated(false);
+    setCurrentPage('home');
+  };
+  // Show Interview Session
+  if (showInterviewSession && selectedProfile) {
+    return <InterviewSession profile={selectedProfile} onEnd={handleEndInterview} />;
+  }
+  // Show Job Profile Creation
+  if (showJobProfileCreation) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <nav className="bg-white shadow-lg">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="flex justify-between items-center">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                SmartInterviewPrep
+              </h1>
+              <div className="flex items-center gap-4">
+                <span className="text-gray-600">Welcome, {currentUser?.username}</span>
+                <button onClick={handleLogout} className="px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50">
+                  🚪 Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+        <JobProfileCreation onSubmit={handleJobProfileSubmit} onCancel={() => setShowJobProfileCreation(false)} />
+      </div>
+    );
+  }
+  // Main Authenticated Layout
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <nav className="bg-white shadow-lg sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex justify-between items-center h-16">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                SmartInterviewPrep
+              </h1>
+              <div className="hidden md:flex items-center space-x-8">
+                <button onClick={() => setCurrentPage('home')} className={`px-3 py-2 text-sm font-medium transition-all ${currentPage === 'home' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-700 hover:text-blue-600'}`}>
+                  🏠 Home
+                </button>
+                <button onClick={() => setCurrentPage('about')} className={`px-3 py-2 text-sm font-medium transition-all ${currentPage === 'about' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-700 hover:text-blue-600'}`}>
+                  📖 About Us
+                </button>
+                <button onClick={() => setCurrentPage('services')} className={`px-3 py-2 text-sm font-medium transition-all ${currentPage === 'services' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-700 hover:text-blue-600'}`}>
+                  🛠️ Services
+                </button>
+                <button onClick={() => setCurrentPage('contact')} className={`px-3 py-2 text-sm font-medium transition-all ${currentPage === 'contact' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-700 hover:text-blue-600'}`}>
+                  📞 Contact Us
+                </button>
+                <button onClick={handleTakeInterview} className="px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700">
+                  🎤 Take an Interview
+                </button>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600">👋 Welcome, <span className="font-semibold text-blue-600">{currentUser?.username}</span></span>
+                <button onClick={handleLogout} className="px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-50">
+                  🚪 Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+        <div className="py-8">
+          {currentPage === 'home' && (
+            <Dashboard 
+              user={currentUser} 
+              onTakeInterview={handleStartInterview} 
+              onNavigate={setCurrentPage} 
+              onLogout={handleLogout} 
+              activePage={currentPage} 
+            />
+          )}
+          {currentPage === 'about' && (
+            <div className="max-w-7xl mx-auto px-4 py-16">
+              <h1 className="text-5xl font-bold text-center text-gray-900 mb-4">📖 About Us</h1>
+              <p className="text-xl text-center text-gray-600 mb-12">Empowering developers worldwide with 100% FREE AI-powered interview practice</p>
+              <div className="grid md:grid-cols-2 gap-8 mb-16">
+                <div className="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-2">
+                  <div className="text-6xl mb-4 text-center">🚀</div>
+                  <h2 className="text-3xl font-bold mb-4 text-center">Our Mission</h2>
+                  <p className="text-gray-600 text-center text-lg">To democratize interview preparation by providing completely FREE, AI-powered tools that help developers of all skill levels practice and succeed.</p>
+                </div>
+                <div className="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-2">
+                  <div className="text-6xl mb-4 text-center">🎯</div>
+                  <h2 className="text-3xl font-bold mb-4 text-center">Our Vision</h2>
+                  <p className="text-gray-600 text-center text-lg">To become the world's most accessible interview preparation platform, helping 1 million developers land their dream jobs.</p>
+                </div>
+              </div>
+              <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl p-12 text-white mb-16 transform hover:scale-105 transition-all">
+                <div className="text-center max-w-3xl mx-auto">
+                  <div className="text-7xl mb-6 animate-bounce">❤️</div>
+                  <h3 className="text-4xl font-bold mb-6">Our Promise</h3>
+                  <p className="text-2xl text-white/90 mb-4">All our services are <span className="font-extrabold underline decoration-yellow-300">100% FREE</span></p>
+                  <p className="text-xl text-white/80">No hidden costs • No premium tiers • No credit card required</p>
+                </div>
+              </div>
+              <div className="grid md:grid-cols-3 gap-8 text-center">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-2xl shadow-lg">
+                  <div className="text-5xl mb-4">👥</div>
+                  <div className="text-4xl font-bold text-blue-600 mb-2">10K+</div>
+                  <div className="text-gray-700 text-lg">Active Users</div>
+                </div>
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-8 rounded-2xl shadow-lg">
+                  <div className="text-5xl mb-4">🎯</div>
+                  <div className="text-4xl font-bold text-purple-600 mb-2">50K+</div>
+                  <div className="text-gray-700 text-lg">Interviews Completed</div>
+                </div>
+                <div className="bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-2xl shadow-lg">
+                  <div className="text-5xl mb-4">⭐</div>
+                  <div className="text-4xl font-bold text-green-600 mb-2">95%</div>
+                  <div className="text-gray-700 text-lg">Success Rate</div>
+                </div>
+              </div>
+            </div>
+          )}
+          {currentPage === 'services' && (
+            <div className="max-w-7xl mx-auto px-4 py-16">
+              <div className="text-center mb-12">
+                <h1 className="text-5xl font-bold text-gray-900 mb-4">🛠️ Our Services</h1>
+                <p className="text-xl text-gray-600 mb-4">All services are <span className="font-bold text-green-600 text-2xl">100% FREE</span></p>
+                <p className="text-lg text-gray-500">No subscriptions • No hidden fees • No credit card required</p>
+              </div>
+              <div className="grid md:grid-cols-3 gap-8 mb-16">
+                <div className="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all group">
+                  <div className="relative">
+                    <div className="absolute -top-4 -right-4 bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-full animate-pulse">
+                      🆓 FREE
+                    </div>
+                    <div className="text-7xl mb-6 text-center group-hover:scale-110 transition-transform">🎤</div>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-4 text-center">AI Mock Interviews</h3>
+                  <p className="text-gray-600 mb-6 text-center">Practice with our advanced AI interviewer that adapts to your skill level and tech stack.</p>
+                  <ul className="space-y-3 text-gray-700">
+                    <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Unlimited interviews</li>
+                    <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Role-specific questions</li>
+                    <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Real-time feedback</li>
+                  </ul>
+                </div>
+                <div className="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all group">
+                  <div className="relative">
+                    <div className="absolute -top-4 -right-4 bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-full animate-pulse">
+                      🆓 FREE
+                    </div>
+                    <div className="text-7xl mb-6 text-center group-hover:scale-110 transition-transform">📊</div>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-4 text-center">Performance Analytics</h3>
+                  <p className="text-gray-600 mb-6 text-center">Track your progress with detailed analytics and identify areas for improvement.</p>
+                  <ul className="space-y-3 text-gray-700">
+                    <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Score tracking</li>
+                    <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Weakness analysis</li>
+                    <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Progress tracking</li>
+                  </ul>
+                </div>
+                <div className="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all group">
+                  <div className="relative">
+                    <div className="absolute -top-4 -right-4 bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-full animate-pulse">
+                      🆓 FREE
+                    </div>
+                    <div className="text-7xl mb-6 text-center group-hover:scale-110 transition-transform">💡</div>
+                  </div>
+                  <h3 className="text-2xl font-bold mb-4 text-center">Skill Assessment</h3>
+                  <p className="text-gray-600 mb-6 text-center">Get comprehensive assessments of your technical skills with personalized recommendations.</p>
+                  <ul className="space-y-3 text-gray-700">
+                    <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Technical knowledge</li>
+                    <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Problem-solving ability</li>
+                    <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Communication skills</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="bg-gradient-to-r from-green-600 via-teal-600 to-blue-600 rounded-3xl p-12 text-white text-center transform hover:scale-105 transition-all">
+                <div className="max-w-3xl mx-auto">
+                  <div className="text-8xl mb-6 animate-bounce">🆓</div>
+                  <h3 className="text-4xl font-bold mb-6">All Services Are Completely Free</h3>
+                  <p className="text-2xl text-white/90 mb-8">No subscriptions • No hidden fees • No credit card required</p>
+                </div>
+              </div>
+            </div>
+          )}
+          {currentPage === 'contact' && (
+            <div className="max-w-7xl mx-auto px-4 py-16">
+              <div className="text-center mb-12">
+                <h1 className="text-5xl font-bold text-gray-900 mb-4">📞 Contact Us</h1>
+                <p className="text-xl text-gray-600 mb-4">We're here to help - support is always <span className="font-bold text-green-600">FREE</span></p>
+              </div>
+              <div className="grid md:grid-cols-2 gap-12">
+                <div className="space-y-6">
+                  <div className="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all">
+                    <h3 className="text-3xl font-bold mb-8 text-center">📱 Get in Touch</h3>
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-6 p-6 bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl hover:scale-105 transition-all">
+                        <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg">📧</div>
+                        <div>
+                          <p className="text-sm text-gray-500">Email</p>
+                          <p className="text-xl font-semibold">support@smartinterviewprep.com</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6 p-6 bg-gradient-to-r from-purple-50 to-purple-100 rounded-2xl hover:scale-105 transition-all">
+                        <div className="w-16 h-16 bg-purple-500 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg">💬</div>
+                        <div>
+                          <p className="text-sm text-gray-500">Discord</p>
+                          <p className="text-xl font-semibold">discord.gg/smartinterview</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6 p-6 bg-gradient-to-r from-green-50 to-green-100 rounded-2xl hover:scale-105 transition-all">
+                        <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg">🐦</div>
+                        <div>
+                          <p className="text-sm text-gray-500">Twitter</p>
+                          <p className="text-xl font-semibold">@SmartInterviewPrep</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-white p-8 rounded-3xl shadow-xl">
+                  <h3 className="text-3xl font-bold mb-8 text-center">📝 Send us a message</h3>
+                  <form className="space-y-6">
+                    <input type="text" placeholder="Your Name" className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl text-lg" />
+                    <input type="email" placeholder="Your Email" className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl text-lg" />
+                    <textarea rows={5} placeholder="Your Message" className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl text-lg"></textarea>
+                    <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg">
+                      Send Message 📨
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  // Home Page (Not logged in) - WITH BEAUTIFUL HUMAN-AI IMAGE AND ALL PAGES CONTENT
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <nav className="bg-white shadow-lg sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex justify-between items-center h-16">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              SmartInterviewPrep
+            </h1>
+            <div className="hidden md:flex items-center space-x-8">
+              <button onClick={() => setCurrentPage('home')} className={`px-3 py-2 text-sm font-medium transition-all ${currentPage === 'home' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-700 hover:text-blue-600'}`}>
+                🏠 Home
+              </button>
+              <button onClick={() => setCurrentPage('about')} className={`px-3 py-2 text-sm font-medium transition-all ${currentPage === 'about' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-700 hover:text-blue-600'}`}>
+                📖 About Us
+              </button>
+              <button onClick={() => setCurrentPage('services')} className={`px-3 py-2 text-sm font-medium transition-all ${currentPage === 'services' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-700 hover:text-blue-600'}`}>
+                🛠️ Services
+              </button>
+              <button onClick={() => setCurrentPage('contact')} className={`px-3 py-2 text-sm font-medium transition-all ${currentPage === 'contact' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-700 hover:text-blue-600'}`}>
+                📞 Contact Us
+              </button>
+            </div>
+            <div className="flex items-center gap-4">
+              <button onClick={() => setShowLoginModal(true)} className="px-6 py-2 text-blue-600 font-semibold hover:text-blue-700">
+                🔐 Login
+              </button>
+              <button onClick={() => setShowSignupModal(true)} className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700">
+                ✨ Sign Up
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+      {/* Page Content */}
+      <div className="py-8">
+        {currentPage === 'home' && (
+          <>
+            {/* Hero Section with Beautiful Human-AI Image */}
+            <div className="relative overflow-hidden">
+              <div className="absolute inset-0">
+                <div className="absolute top-0 left-0 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+                <div className="absolute top-0 right-0 w-72 h-72 bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+              </div>
+              <div className="relative max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                  {/* Left Content */}
+                  <div className="text-center lg:text-left">
+                    <h1 className="text-5xl md:text-6xl font-extrabold">
+                      <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        Smart Interview
+                      </span>
+                      <br />
+                      <span className="text-gray-900">Preparation System</span>
+                    </h1>
+                    <p className="mt-6 text-xl text-gray-600 max-w-3xl">
+                      Free AI-powered platform to help you ace technical interviews using React, TypeScript, and Gemini AI
+                    </p>
+                    {/* Stats */}
+                    <div className="mt-8 flex justify-center lg:justify-start space-x-12">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-blue-600">10K+</div>
+                        <div className="text-sm text-gray-500">👥 Users</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-purple-600">50K+</div>
+                        <div className="text-sm text-gray-500">🎯 Interviews</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-green-600">95%</div>
+                        <div className="text-sm text-gray-500">⭐ Success</div>
+                      </div>
+                    </div>
+                    {/* CTA Button */}
+                    <div className="mt-10">
+                      <button onClick={() => setShowSignupModal(true)} className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg text-lg">
+                        ✨ Sign Up to Start ✨
+                      </button>
+                    </div>
+                    {/* Free Badge */}
+                    <p className="mt-4 text-green-600 font-semibold flex items-center justify-center lg:justify-start gap-2">
+                      <span>🆓</span> All Services Are 100% Free <span>🆓</span>
+                    </p>
+                  </div>
+                  {/* Right Content - Beautiful Human-AI Image */}
+                  <div className="relative">
+                    <div className="bg-white rounded-3xl shadow-2xl p-6 border border-gray-100 transform hover:scale-105 transition-all duration-500">
+                      {/* Status Bar */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                          <span className="text-sm font-medium text-gray-600">🤖 AI Assistant Online</span>
+                        </div>
+                      </div>
+                      {/* Human and AI Avatars */}
+                      <div className="flex items-center justify-around py-4">
+                        <div className="text-center group">
+                          <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-3xl flex items-center justify-center mb-2 shadow-xl transform group-hover:scale-110 group-hover:rotate-3 transition-all">
+                            <span className="text-4xl">👤</span>
+                          </div>
+                          <span className="text-sm font-semibold text-gray-700">You</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div className="text-4xl text-purple-500 animate-pulse">⚡</div>
+                          <div className="text-xs text-gray-400 mt-1">AI Processing</div>
+                        </div>
+                        <div className="text-center group">
+                          <div className="w-24 h-24 bg-gradient-to-br from-purple-500 to-purple-600 rounded-3xl flex items-center justify-center mb-2 shadow-xl transform group-hover:scale-110 group-hover:-rotate-3 transition-all">
+                            <span className="text-4xl">🤖</span>
+                          </div>
+                          <span className="text-sm font-semibold text-gray-700">Gemini AI</span>
+                        </div>
+                      </div>
+                      {/* Conversation Preview */}
+                      <div className="mt-6 space-y-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg flex items-center justify-center text-white text-sm">
+                            👤
+                          </div>
+                          <div className="flex-1">
+                            <div className="bg-blue-50 rounded-2xl rounded-tl-none p-3 max-w-xs">
+                              <p className="text-sm text-gray-800">"How do I prepare for React interviews?"</p>
+                            </div>
+                            <span className="text-xs text-gray-400 mt-1 block">Just now</span>
+                          </div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 bg-gradient-to-br from-purple-400 to-purple-500 rounded-lg flex items-center justify-center text-white text-sm">
+                            🤖
+                          </div>
+                          <div className="flex-1">
+                            <div className="bg-purple-50 rounded-2xl rounded-tl-none p-3 max-w-sm">
+                              <p className="text-sm text-gray-800">"I'll generate personalized questions based on your experience with React!"</p>
+                            </div>
+                            <span className="text-xs text-gray-400 mt-1 block">1 min ago</span>
+                          </div>
+                        </div>
+                      </div>
+                      {/* AI Analysis Preview */}
+                      <div className="mt-4 bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                          <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-xs text-gray-400 ml-2">AI Analysis Complete</span>
+                        </div>
+                        <div className="flex items-center justify-between text-white">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-blue-400">95%</div>
+                            <div className="text-xs text-gray-400">Match Rate</div>
+                          </div>
+                          <div className="w-px h-8 bg-gray-700"></div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-green-400">3/5</div>
+                            <div className="text-xs text-gray-400">Key Points</div>
+                          </div>
+                          <div className="w-px h-8 bg-gray-700"></div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-purple-400">2</div>
+                            <div className="text-xs text-gray-400">Improvements</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Floating Decorations */}
+                    <div className="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-full flex items-center justify-center text-2xl animate-bounce shadow-xl">
+                      ⚡
+                    </div>
+                    <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center text-xl animate-pulse shadow-xl">
+                      💬
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Code Snippet Section */}
+            <div className="max-w-4xl mx-auto px-4 py-12">
+              <div className="bg-gray-900 rounded-lg p-6 text-green-400 font-mono text-sm text-center border border-gray-700">
+                "componentDidMount for API calls, componentDidUpdate for prop changes, and componentWillUnmount for cleanup"
+              </div>
+              <p className="text-center text-gray-600 mt-4">🤝 Human-AI Interaction • 100% Free Services</p>
+            </div>
+          </>
+        )}
+        {currentPage === 'about' && (
+          <div className="max-w-7xl mx-auto px-4 py-16">
+            <h1 className="text-5xl font-bold text-center text-gray-900 mb-4">📖 About Us</h1>
+            <p className="text-xl text-center text-gray-600 mb-12">Empowering developers worldwide with 100% FREE AI-powered interview practice</p>
+            <div className="grid md:grid-cols-2 gap-8 mb-16">
+              <div className="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-2">
+                <div className="text-6xl mb-4 text-center">🚀</div>
+                <h2 className="text-3xl font-bold mb-4 text-center">Our Mission</h2>
+                <p className="text-gray-600 text-center text-lg">To democratize interview preparation by providing completely FREE, AI-powered tools that help developers of all skill levels practice and succeed.</p>
+              </div>
+              <div className="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-2">
+                <div className="text-6xl mb-4 text-center">🎯</div>
+                <h2 className="text-3xl font-bold mb-4 text-center">Our Vision</h2>
+                <p className="text-gray-600 text-center text-lg">To become the world's most accessible interview preparation platform, helping 1 million developers land their dream jobs.</p>
+              </div>
+            </div>
+            <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl p-12 text-white mb-16 transform hover:scale-105 transition-all">
+              <div className="text-center max-w-3xl mx-auto">
+                <div className="text-7xl mb-6 animate-bounce">❤️</div>
+                <h3 className="text-4xl font-bold mb-6">Our Promise</h3>
+                <p className="text-2xl text-white/90 mb-4">All our services are <span className="font-extrabold underline decoration-yellow-300">100% FREE</span></p>
+                <p className="text-xl text-white/80">No hidden costs • No premium tiers • No credit card required</p>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8 text-center">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-2xl shadow-lg">
+                <div className="text-5xl mb-4">👥</div>
+                <div className="text-4xl font-bold text-blue-600 mb-2">10K+</div>
+                <div className="text-gray-700 text-lg">Active Users</div>
+              </div>
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-8 rounded-2xl shadow-lg">
+                <div className="text-5xl mb-4">🎯</div>
+                <div className="text-4xl font-bold text-purple-600 mb-2">50K+</div>
+                <div className="text-gray-700 text-lg">Interviews Completed</div>
+              </div>
+              <div className="bg-gradient-to-br from-green-50 to-green-100 p-8 rounded-2xl shadow-lg">
+                <div className="text-5xl mb-4">⭐</div>
+                <div className="text-4xl font-bold text-green-600 mb-2">95%</div>
+                <div className="text-gray-700 text-lg">Success Rate</div>
+              </div>
+            </div>
+          </div>
+        )}
+        {currentPage === 'services' && (
+          <div className="max-w-7xl mx-auto px-4 py-16">
+            <div className="text-center mb-12">
+              <h1 className="text-5xl font-bold text-gray-900 mb-4">🛠️ Our Services</h1>
+              <p className="text-xl text-gray-600 mb-4">All services are <span className="font-bold text-green-600 text-2xl">100% FREE</span></p>
+              <p className="text-lg text-gray-500">No subscriptions • No hidden fees • No credit card required</p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8 mb-16">
+              <div className="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all group">
+                <div className="relative">
+                  <div className="absolute -top-4 -right-4 bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-full animate-pulse">
+                    🆓 FREE
+                  </div>
+                  <div className="text-7xl mb-6 text-center group-hover:scale-110 transition-transform">🎤</div>
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-center">AI Mock Interviews</h3>
+                <p className="text-gray-600 mb-6 text-center">Practice with our advanced AI interviewer that adapts to your skill level and tech stack.</p>
+                <ul className="space-y-3 text-gray-700">
+                  <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Unlimited interviews</li>
+                  <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Role-specific questions</li>
+                  <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Real-time feedback</li>
+                </ul>
+              </div>
+              <div className="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all group">
+                <div className="relative">
+                  <div className="absolute -top-4 -right-4 bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-full animate-pulse">
+                    🆓 FREE
+                  </div>
+                  <div className="text-7xl mb-6 text-center group-hover:scale-110 transition-transform">📊</div>
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-center">Performance Analytics</h3>
+                <p className="text-gray-600 mb-6 text-center">Track your progress with detailed analytics and identify areas for improvement.</p>
+                <ul className="space-y-3 text-gray-700">
+                  <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Score tracking</li>
+                  <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Weakness analysis</li>
+                  <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Progress tracking</li>
+                </ul>
+              </div>
+              <div className="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all group">
+                <div className="relative">
+                  <div className="absolute -top-4 -right-4 bg-green-500 text-white text-sm font-bold px-4 py-2 rounded-full animate-pulse">
+                    🆓 FREE
+                  </div>
+                  <div className="text-7xl mb-6 text-center group-hover:scale-110 transition-transform">💡</div>
+                </div>
+                <h3 className="text-2xl font-bold mb-4 text-center">Skill Assessment</h3>
+                <p className="text-gray-600 mb-6 text-center">Get comprehensive assessments of your technical skills with personalized recommendations.</p>
+                <ul className="space-y-3 text-gray-700">
+                  <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Technical knowledge</li>
+                  <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Problem-solving ability</li>
+                  <li className="flex items-center gap-3"><span className="text-green-500 text-xl">✓</span> Communication skills</li>
+                </ul>
+              </div>
+            </div>
+            <div className="bg-gradient-to-r from-green-600 via-teal-600 to-blue-600 rounded-3xl p-12 text-white text-center transform hover:scale-105 transition-all">
+              <div className="max-w-3xl mx-auto">
+                <div className="text-8xl mb-6 animate-bounce">🆓</div>
+                <h3 className="text-4xl font-bold mb-6">All Services Are Completely Free</h3>
+                <p className="text-2xl text-white/90 mb-8">No subscriptions • No hidden fees • No credit card required</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {currentPage === 'contact' && (
+          <div className="max-w-7xl mx-auto px-4 py-16">
+            <div className="text-center mb-12">
+              <h1 className="text-5xl font-bold text-gray-900 mb-4">📞 Contact Us</h1>
+              <p className="text-xl text-gray-600 mb-4">We're here to help - support is always <span className="font-bold text-green-600">FREE</span></p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-12">
+              <div className="space-y-6">
+                <div className="bg-white p-8 rounded-3xl shadow-lg hover:shadow-xl transition-all">
+                  <h3 className="text-3xl font-bold mb-8 text-center">📱 Get in Touch</h3>
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-6 p-6 bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl hover:scale-105 transition-all">
+                      <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg">📧</div>
+                      <div>
+                        <p className="text-sm text-gray-500">Email</p>
+                        <p className="text-xl font-semibold">support@smartinterviewprep.com</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-6 p-6 bg-gradient-to-r from-purple-50 to-purple-100 rounded-2xl hover:scale-105 transition-all">
+                      <div className="w-16 h-16 bg-purple-500 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg">💬</div>
+                      <div>
+                        <p className="text-sm text-gray-500">Discord</p>
+                        <p className="text-xl font-semibold">discord.gg/smartinterview</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-6 p-6 bg-gradient-to-r from-green-50 to-green-100 rounded-2xl hover:scale-105 transition-all">
+                      <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg">🐦</div>
+                      <div>
+                        <p className="text-sm text-gray-500">Twitter</p>
+                        <p className="text-xl font-semibold">@SmartInterviewPrep</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white p-8 rounded-3xl shadow-xl">
+                <h3 className="text-3xl font-bold mb-8 text-center">📝 Send us a message</h3>
+                <form className="space-y-6">
+                  <input type="text" placeholder="Your Name" className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl text-lg" />
+                  <input type="email" placeholder="Your Email" className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl text-lg" />
+                  <textarea rows={5} placeholder="Your Message" className="w-full px-6 py-4 border-2 border-gray-200 rounded-xl text-lg"></textarea>
+                  <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg">
+                    Send Message 📨
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      {/* Add custom animations */}
+      <style>{`
+        @keyframes blob {
+          0% { transform: translate(0px, 0px) scale(1); }
+          33% { transform: translate(30px, -50px) scale(1.1); }
+          66% { transform: translate(-20px, 20px) scale(0.9); }
+          100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+      `}</style>
+      {/* Signup Modal - FULL DETAILED FORM */}
+      {showSignupModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-8 my-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">✨ Create Your Account</h2>
+              <button onClick={() => { setShowSignupModal(false); setShowPGSection(false); }} className="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+            </div>
+            <form onSubmit={handleSignup} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Username *</label>
+                  <input type="text" name="username" required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Choose a username" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                  <input type="email" name="email" required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="your@email.com" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+                <input type="tel" name="phoneNumber" required pattern="[0-9]{10}" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="10-digit mobile number" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                  <input type="password" name="password" required minLength={6} className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Minimum 6 characters" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password *</label>
+                  <input type="password" name="confirmPassword" required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Re-enter password" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">12th Percentage *</label>
+                <input type="number" name="twelfthPercentage" required step="0.01" min="0" max="100" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="e.g., 85.5" />
+              </div>
+              <div className="border-t pt-4">
+                <h3 className="text-lg font-semibold mb-4">Undergraduate Details *</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">College</label>
+                    <input type="text" name="ugCollege" required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="College name" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Course</label>
+                    <select name="ugCourse" required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                      <option value="">Select Course</option>
+                      {ugCourseOptions.map(course => <option key={course} value={course}>{course}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">CGPA</label>
+                    <input type="number" name="ugCGPA" required step="0.01" min="0" max="10" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="e.g., 8.5" />
+                  </div>
+                </div>
+              </div>
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Postgraduate Details</h3>
+                  <button type="button" onClick={() => setShowPGSection(!showPGSection)} className="px-4 py-2 text-sm bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700">
+                    {showPGSection ? "Remove PG Details" : "Add PG Details (Optional)"}
+                  </button>
+                </div>
+                {showPGSection && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">College</label>
+                      <input type="text" name="pgCollege" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="College name" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Course</label>
+                      <select name="pgCourse" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select Course</option>
+                        {pgCourseOptions.map(course => <option key={course} value={course}>{course}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">CGPA</label>
+                      <input type="number" name="pgCGPA" step="0.01" min="0" max="10" className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="e.g., 8.5" />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-4 pt-4">
+                <button type="submit" className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold">
+                  Create Account
+                </button>
+                <button type="button" onClick={() => { setShowSignupModal(false); setShowPGSection(false); }} className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Login Modal - FULL DETAILED FORM */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-md w-full p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">🔐 Login to Your Account</h2>
+              <button onClick={() => setShowLoginModal(false)} className="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+            </div>
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Username or Email *</label>
+                <input type="text" name="username" required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Enter username or email" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                <input type="password" name="password" required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Enter your password" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password *</label>
+                <input type="password" name="confirmPassword" required className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Re-enter your password" />
+              </div>
+              <div className="flex gap-4">
+                <button type="submit" className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold">
+                  Login
+                </button>
+                <button type="button" onClick={() => setShowLoginModal(false)} className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+export default App;

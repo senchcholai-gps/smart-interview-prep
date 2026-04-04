@@ -1,0 +1,275 @@
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const mongoose = require('mongoose');
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// ==================== MONGODB CONNECTION ====================
+
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error('❌ MONGODB_URI is not defined in .env file');
+  process.exit(1);
+}
+
+mongoose.set('strictQuery', false);
+
+mongoose.connect(MONGODB_URI)
+  .then(() => {
+    console.log('✅ Connected to MongoDB successfully');
+    console.log('📦 Database:', MONGODB_URI);
+  })
+  .catch((err) => {
+    console.error('❌ MongoDB connection error:', err);
+    process.exit(1);
+  });
+
+// ==================== MIDDLEWARE ====================
+
+app.use(cors());
+app.use(express.json());
+
+// ==================== SCHEMAS ====================
+
+// User Schema
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  username: { type: String },
+  email: { type: String, required: true, unique: true },
+  phone: String,
+  password: String,
+  role: { type: String, default: 'user' },
+  status: { type: String, default: 'Active' },
+  profiles: { type: Number, default: 0 },
+  interviews: { type: Number, default: 0 },
+  avgScore: { type: Number, default: 0 },
+  joinedDate: { type: Date, default: Date.now }
+});
+
+// Profile Schema
+const profileSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  userName: String,
+  jobRole: { type: String, required: true },
+  experience: String,
+  techStack: String,
+  createdAt: { type: Date, default: Date.now }
+});
+
+// Interview Schema
+const interviewSchema = new mongoose.Schema({
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  userName: String,
+  jobRole: String,
+  techStack: String,
+  questions: Array,
+  answers: Array,
+  score: Number,
+  date: { type: Date, default: Date.now }
+});
+
+// Models
+const User = mongoose.model('User', userSchema);
+const Profile = mongoose.model('Profile', profileSchema);
+const Interview = mongoose.model('Interview', interviewSchema);
+
+// ==================== USER ROUTES ====================
+
+// Get all users
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await User.find().sort({ joinedDate: -1 });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Register new user
+app.post('/api/register', async (req, res) => {
+  try {
+    console.log("Incoming Data:", req.body);
+
+    const user = new User(req.body);
+    const savedUser = await user.save();
+
+    console.log("Saved User:", savedUser);
+
+    res.status(201).json({
+      message: 'User created successfully',
+      user: savedUser
+    });
+
+  } catch (error) {
+    console.error("Register Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ✅ FIXED: Login accepts BOTH email and username
+app.post('/api/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    console.log('🔍 Login attempt with:', email);
+
+    // Try to find by email first
+    let user = await User.findOne({ email: email });
+    
+    // If not found by email, try by username
+    if (!user) {
+      console.log('⚠️ Not found by email, trying username...');
+      user = await User.findOne({ username: email });
+    }
+
+    if (!user) {
+      console.log('❌ User not found with:', email);
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    console.log('✅ User found:', user.name || user.username);
+    
+    // Return user without sensitive data
+    res.json({ 
+      message: 'Login successful', 
+      user: {
+        _id: user._id,
+        name: user.name,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        status: user.status,
+        profiles: user.profiles,
+        interviews: user.interviews,
+        avgScore: user.avgScore
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Login error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== PROFILE ROUTES ====================
+
+// Get all profiles
+app.get('/api/profiles', async (req, res) => {
+  try {
+    const profiles = await Profile.find().sort({ createdAt: -1 });
+    res.json(profiles);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get profiles by user ID
+app.get('/api/profiles/user/:userId', async (req, res) => {
+  try {
+    const profiles = await Profile.find({ userId: req.params.userId }).sort({ createdAt: -1 });
+    res.json(profiles);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create profile
+app.post('/api/profiles', async (req, res) => {
+  try {
+    const profile = new Profile(req.body);
+    const savedProfile = await profile.save();
+
+    await User.findByIdAndUpdate(profile.userId, {
+      $inc: { profiles: 1 }
+    });
+
+    res.status(201).json(savedProfile);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE profile by ID
+app.delete('/api/profiles/:id', async (req, res) => {
+  try {
+    const profile = await Profile.findByIdAndDelete(req.params.id);
+    if (!profile) {
+      return res.status(404).json({ error: 'Profile not found' });
+    }
+    res.json({ message: 'Profile deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== INTERVIEW ROUTES ====================
+
+// GET all interviews
+app.get('/api/interviews', async (req, res) => {
+  try {
+    const interviews = await Interview.find().sort({ date: -1 });
+    res.json(interviews);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET interviews by user ID
+app.get('/api/interviews/user/:userId', async (req, res) => {
+  try {
+    const interviews = await Interview.find({ userId: req.params.userId }).sort({ date: -1 });
+    res.json(interviews);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET single interview by ID
+app.get('/api/interviews/:id', async (req, res) => {
+  try {
+    const interview = await Interview.findById(req.params.id);
+    if (!interview) {
+      return res.status(404).json({ error: 'Interview not found' });
+    }
+    res.json(interview);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST create new interview
+app.post('/api/interviews', async (req, res) => {
+  try {
+    const interview = new Interview(req.body);
+    const savedInterview = await interview.save();
+
+    await User.findByIdAndUpdate(interview.userId, {
+      $inc: { interviews: 1 },
+      $set: { avgScore: interview.score }
+    });
+
+    res.status(201).json(savedInterview);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== HEALTH ROUTE ====================
+
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'Smart Interview Prep API is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// ==================== START SERVER ====================
+
+app.listen(PORT, () => {
+  console.log(`🚀 Interview Prep API running at http://localhost:${PORT}`);
+});
