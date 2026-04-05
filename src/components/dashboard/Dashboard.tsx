@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import JobProfileCreation from "../job-profile/JobProfileCreation";
+import { API_URL } from "../../services/api";
 
 interface JobProfile {
   id: string;
@@ -45,7 +46,7 @@ const Dashboard: React.FC<Props> = ({
         setIsLoading(true);
         console.log('Fetching profiles for user:', user._id);
         
-        const response = await fetch(`http://localhost:5000/api/profiles/user/${user._id}`);
+        const response = await fetch(`${API_URL}/api/profiles/user/${user._id}`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch profiles');
@@ -108,7 +109,7 @@ const Dashboard: React.FC<Props> = ({
         jobDescription: jobProfile.jobDescription || ''
       };
 
-      const response = await fetch('http://localhost:5000/api/profiles', {
+      const response = await fetch(`${API_URL}/api/profiles`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(profileData)
@@ -176,7 +177,7 @@ const Dashboard: React.FC<Props> = ({
     try {
       console.log('Deleting profile:', profileToDelete._id);
       
-      const response = await fetch(`http://localhost:5000/api/profiles/${profileToDelete._id}`, {
+      const response = await fetch(`${API_URL}/api/profiles/${profileToDelete._id}`, {
         method: 'DELETE'
       });
 

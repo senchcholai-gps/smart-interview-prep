@@ -1,7 +1,7 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import './auth.css';
-
+import { API_URL } from '../../services/api';
 interface SignupFormProps {
   onSuccess: () => void;
 }
@@ -61,7 +61,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess }) => {
         status: 'Active'
       };
 
-      const response = await fetch('https://smart-interview-prep-backend-23bz.onrender.com/api/register', {
+      const response = await fetch(`${API_URL}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)
@@ -86,7 +86,13 @@ const SignupForm: React.FC<SignupFormProps> = ({ onSuccess }) => {
       }
 
     } catch (err: any) {
-      setError(err.message || 'Registration failed. Please try again.');
+      let errorMessage = 'Registration failed. Please try again.';
+      if (err instanceof TypeError && err.message === 'Failed to fetch') {
+        errorMessage = 'Cannot connect to the server. Please try again later.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import './pages.css';
 import Navbar from '../components/layout/Navbar';
@@ -59,7 +59,7 @@ const Services = () => {
               <h3>AI Interview Simulator</h3>
               <p>Practice with our advanced AI that simulates real technical interviews</p>
               <div className="service-meta">
-                <span className="meta-item">📍 Localhost:5000/services</span>
+                <span className="meta-item">🤖 AI Powered</span>
                 <span className="meta-item">🆓 Free</span>
               </div>
               <button className="service-btn">Try Now</button>

@@ -1,5 +1,5 @@
-﻿import axios from "axios";
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+import axios from "axios";
+export const API_URL = process.env.REACT_APP_API_URL || "https://smart-interview-prep-backend-23bz.onrender.com";
 export interface ProfileData {
   userId: string;
   userName: string;

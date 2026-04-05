@@ -1,5 +1,6 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { AdminUser, AdminStats, SystemHealth } from "./types";
+import { API_URL } from "../../services/api";
 
 interface Props {
   onLogout: () => void;
@@ -68,13 +69,13 @@ const AdminDashboard: React.FC<Props> = ({ onLogout, adminUser }) => {
   const fetchAdminData = async () => {
     setLoading(true);
     try {
-      const usersResponse = await fetch('http://localhost:5000/api/users');
+      const usersResponse = await fetch(`${API_URL}/api/users`);
       const usersData = await usersResponse.json();
       
-      const profilesResponse = await fetch('http://localhost:5000/api/profiles');
+      const profilesResponse = await fetch(`${API_URL}/api/profiles`);
       const profilesData = await profilesResponse.json();
       
-      const interviewsResponse = await fetch('http://localhost:5000/api/interviews');
+      const interviewsResponse = await fetch(`${API_URL}/api/interviews`);
       const interviewsData = await interviewsResponse.json();
 
       console.log('📊 Admin Data:', { users: usersData, profiles: profilesData, interviews: interviewsData });
@@ -173,7 +174,7 @@ const AdminDashboard: React.FC<Props> = ({ onLogout, adminUser }) => {
   const handleDeleteProfile = async (profileId: string) => {
     if (window.confirm('Are you sure you want to delete this profile?')) {
       try {
-        const response = await fetch(`http://localhost:5000/api/profiles/${profileId}`, {
+        const response = await fetch(`${API_URL}/api/profiles/${profileId}`, {
           method: 'DELETE'
         });
         if (response.ok) {
@@ -189,7 +190,7 @@ const AdminDashboard: React.FC<Props> = ({ onLogout, adminUser }) => {
   const handleDeleteInterview = async (interviewId: string) => {
     if (window.confirm('Are you sure you want to delete this interview?')) {
       try {
-        const response = await fetch(`http://localhost:5000/api/interviews/${interviewId}`, {
+        const response = await fetch(`${API_URL}/api/interviews/${interviewId}`, {
           method: 'DELETE'
         });
         if (response.ok) {

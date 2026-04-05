@@ -1,7 +1,7 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import './auth.css';
-
+import { API_URL } from '../../services/api';
 interface LoginFormProps {
     onSuccess: () => void;
     onSignupClick: () => void;
@@ -38,7 +38,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSignupClick }) => {
         setError('');
 
         try {
-            const response = await fetch('http://localhost:5000/api/login', {
+            const response = await fetch(`${API_URL}/api/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -61,7 +61,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSignupClick }) => {
             }
 
         } catch (err: any) {
-            setError(err.message || 'Invalid username or password');
+            let errorMessage = 'Invalid username or password';
+            if (err instanceof TypeError && err.message === 'Failed to fetch') {
+                errorMessage = 'Cannot connect to the server. Please try again later.';
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -80,7 +86,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSignupClick }) => {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:5000/api/forgot-password', {
+            const response = await fetch(`${API_URL}/api/forgot-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: resetEmail })
@@ -101,7 +107,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSignupClick }) => {
             }, 3000);
 
         } catch (err: any) {
-            setResetError(err.message || 'Email not found. Please check and try again.');
+            let errorMessage = 'Email not found. Please check and try again.';
+            if (err instanceof TypeError && err.message === 'Failed to fetch') {
+                errorMessage = 'Cannot connect to the server. Please try again later.';
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            setResetError(errorMessage);
         } finally {
             setIsLoading(false);
         }

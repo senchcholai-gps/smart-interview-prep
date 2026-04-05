@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Webcam from "react-webcam";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { API_URL } from "../../services/api";
 
 
 interface JobProfile {
@@ -238,7 +239,7 @@ const InterviewSession: React.FC<Props> = ({ profile, onEnd }) => {
 
       console.log('📤 Saving interview to database:', interviewData);
 
-      const response = await fetch('http://localhost:5000/api/interviews', {
+      const response = await fetch(`${API_URL}/api/interviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(interviewData)
