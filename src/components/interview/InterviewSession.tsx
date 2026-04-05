@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import Webcam from "react-webcam";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { API_URL } from "../../services/api";
 
 
@@ -159,11 +158,7 @@ const InterviewSession: React.FC<Props> = ({ profile, onEnd }) => {
     setSessionId(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   }, []);
 
-  // Initialize Gemini with correct model
-  const genAI = new GoogleGenerativeAI(process.env.REACT_APP_GEMINI_API_KEY || "");
 
-  // gemini-2.5-flash: only model with real quota on this API key (20 req/day)
-  const GEMINI_MODEL = "gemini-2.5-flash";
 
   const getAskedQuestionsKey = () => `asked_${cleanedProfile.id}`;
 
@@ -276,11 +271,7 @@ const InterviewSession: React.FC<Props> = ({ profile, onEnd }) => {
     setApiError(null);
 
     try {
-      if (!process.env.REACT_APP_GEMINI_API_KEY) {
-        throw new Error("Gemini API key is missing. Please add it to .env file");
-      }
 
-      const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
       const prompt = `Generate 5 UNIQUE technical interview questions for a ${cleanedProfile.jobRole} position.
       Candidate's Tech Stack: ${cleanedProfile.techStacks.join(", ")}
@@ -309,11 +300,23 @@ const InterviewSession: React.FC<Props> = ({ profile, onEnd }) => {
         }
       ]`;
 
-      console.log(`Sending prompt to Gemini ${GEMINI_MODEL}...`);
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
-      console.log("Gemini response received");
+      console.log(`Sending prompt to backend Gemini API...`);
+      const apiResponse = await fetch(`${API_URL}/api/gemini`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      });
+      const data = await apiResponse.json();
+      
+      if (!apiResponse.ok || data.error) {
+        throw new Error(data.error?.message || data.error || "Unknown error from Gemini API");
+      }
+
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) throw new Error("Invalid response structure from backend Gemini API");
+      console.log("Gemini response received from backend");
 
       let cleanText = extractBalancedJSON(text, true);
 
@@ -488,7 +491,7 @@ This structure helps screen readers announce "navigation" section and lets users
 
       console.log(`User answer: ${userWordCount} words, Target model: ${targetLength} words`);
 
-      const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+
 
       const prompt = `
 You are evaluating a technical interview answer. The user's answer is shown below.
@@ -523,9 +526,22 @@ Return ONLY a valid JSON object with this exact structure:
 }
 `;
 
-      console.log(`Evaluating answer with Gemini ${GEMINI_MODEL}...`);
-      const result = await model.generateContent(prompt);
-      const responseText = result.response.text();
+      console.log(`Evaluating answer with backend Gemini API...`);
+      const apiResponse = await fetch(`${API_URL}/api/gemini`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      });
+      const data = await apiResponse.json();
+      
+      if (!apiResponse.ok || data.error) {
+        throw new Error(data.error?.message || data.error || "Unknown error from Gemini API");
+      }
+
+      const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!responseText) throw new Error("Invalid response structure from backend Gemini API");
 
       // Parse JSON response safely
       let cleanResponse = extractBalancedJSON(responseText, false);
