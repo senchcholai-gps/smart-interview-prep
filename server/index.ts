@@ -15,7 +15,16 @@ app.use(express.json());
 // 🔹 MongoDB Connection
 // ============================
 
-const MONGO_URI = process.env.MONGO_URI as string;
+const MONGO_URI = process.env.MONGODB_URI as string;
+
+// ✅ Debug logs (very important)
+console.log("🧪 ENV CHECK:", MONGO_URI ? "FOUND" : "MISSING");
+console.log("🧪 MONGODB_URI VALUE:", MONGO_URI);
+
+if (!MONGO_URI) {
+    console.error("❌ MONGODB_URI not defined");
+    process.exit(1);
+}
 
 mongoose
     .connect(MONGO_URI)
@@ -70,8 +79,9 @@ app.post("/api/register", async (req, res) => {
 // 🔹 Start Server
 // ============================
 
-const PORT = 5000;
+// ✅ IMPORTANT for Render
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
 });
