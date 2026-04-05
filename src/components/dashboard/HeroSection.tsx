@@ -1,9 +1,11 @@
-﻿import React from 'react';
+import React from 'react';
 import './dashboard.css';
+import DashboardCard from '../DashboardCard';
+
 const HeroSection: React.FC = () => {
   return (
-    <section className="hero-section">
-      <div className="hero-content">
+    <section className="hero-section" style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center', alignItems: 'center' }}>
+      <div className="hero-content" style={{ flex: '1 1 400px' }}>
         <h2 className="hero-title">🔍 Smart Interview Preparation System</h2>
         <p className="hero-subtitle">
           Free AI-powered platform to help you ace technical interviews using React, TypeScript, and Gemini AI
@@ -24,6 +26,11 @@ const HeroSection: React.FC = () => {
           </p>
           <p className="quote-label">Human-AI Interaction</p>
         </div>
+      </div>
+      
+      {/* Dashboard Card placed here */}
+      <div style={{ flex: '1 1 400px', display: 'flex', justifyContent: 'center' }}>
+        <DashboardCard />
       </div>
     </section>
   );

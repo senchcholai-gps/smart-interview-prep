@@ -12,6 +12,9 @@ const PORT = process.env.PORT || 5000;
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
+console.log("🧪 ENV CHECK:", process.env.MONGODB_URI ? "FOUND" : "MISSING");
+console.log("🧪 MONGODB_URI VALUE:", process.env.MONGODB_URI);
+
 if (!MONGODB_URI) {
   console.error('❌ MONGODB_URI is not defined in .env file');
   process.exit(1);
@@ -19,15 +22,15 @@ if (!MONGODB_URI) {
 
 mongoose.set('strictQuery', false);
 
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log('✅ Connected to MongoDB successfully');
-    console.log('📦 Database:', MONGODB_URI);
-  })
-  .catch((err) => {
-    console.error('❌ MongoDB connection error:', err);
-    process.exit(1);
-  });
+console.log("📝 MONGODB_URI from env:", MONGODB_URI);
+
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+  .then(() => console.log('✅ Connected to MongoDB Atlas'))
+  .catch(err => console.error('❌ MongoDB Atlas connection error:', err));
+
 
 // ==================== MIDDLEWARE ====================
 
@@ -116,7 +119,7 @@ app.post('/api/login', async (req, res) => {
   try {
     const { email, username, password } = req.body;
     const loginId = email || username;
-    
+
     console.log('🔍 Login attempt with:', loginId);
 
     // Hardcoded Admin Bypass
@@ -135,7 +138,7 @@ app.post('/api/login', async (req, res) => {
 
     // Try to find by email first
     let user = await User.findOne({ email: loginId });
-    
+
     // If not found by email, try by username
     if (!user) {
       console.log('⚠️ Not found by email, trying username...');
@@ -148,10 +151,10 @@ app.post('/api/login', async (req, res) => {
     }
 
     console.log('✅ User found:', user.name || user.username);
-    
+
     // Return user without sensitive data
-    res.json({ 
-      message: 'Login successful', 
+    res.json({
+      message: 'Login successful',
       user: {
         _id: user._id,
         name: user.name,

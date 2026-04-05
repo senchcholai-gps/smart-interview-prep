@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 const connectDB = async (): Promise<void> => {
     try {
         mongoose.set('strictQuery', false);
+        console.log("Connected to:", process.env.MONGODB_URI); // TEMP LOG
         // Add timeout to prevent hanging
         const conn = await mongoose.connect(
             process.env.MONGODB_URI || "mongodb://localhost:27017/smart-interview-prep",
