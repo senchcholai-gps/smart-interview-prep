@@ -128,7 +128,7 @@ function App() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/register', {
+      const response = await fetch('https://smart-interview-prep-backend-23bz.onrender.com/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -178,7 +178,7 @@ function App() {
       return;
     }
 
-    fetch('http://localhost:5000/api/login', {
+    fetch('https://smart-interview-prep-backend-23bz.onrender.com/api/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
