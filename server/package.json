@@ -4,7 +4,7 @@
   "description": "Backend for Smart Interview Prep application",
   "main": "index.ts",
   "scripts": {
-    "start": "ts-node index.ts",
+    "start": "node server.js",
     "dev": "nodemon server.js",
     "build": "tsc"
   },
