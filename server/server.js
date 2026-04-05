@@ -282,7 +282,7 @@ app.post("/api/gemini", async (req, res) => {
   try {
     const fetch = (await import("node-fetch")).default || global.fetch;
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY || process.env.REACT_APP_GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: {
@@ -293,10 +293,17 @@ app.post("/api/gemini", async (req, res) => {
     );
 
     const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Gemini error:", data);
+      return res.status(500).json({ error: "Gemini API failed", details: data });
+    }
+
     res.json(data);
+
   } catch (error) {
-    console.error("Gemini API Error:", error);
-    res.status(500).json({ error: "Gemini API failed" });
+    console.error("Server error:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
