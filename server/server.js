@@ -222,14 +222,22 @@ app.post('/api/profiles', async (req, res) => {
 
 // DELETE profile by ID
 app.delete('/api/profiles/:id', async (req, res) => {
+  const { id } = req.params;
+
+  // Safety check for invalid profile ID
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Invalid profile ID' });
+  }
+
   try {
-    const profile = await Profile.findByIdAndDelete(req.params.id);
-    if (!profile) {
+    const deletedProfile = await Profile.findByIdAndDelete(id);
+    if (!deletedProfile) {
       return res.status(404).json({ error: 'Profile not found' });
     }
     res.json({ message: 'Profile deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error('Error deleting profile:', err);
+    res.status(500).json({ error: 'Failed to delete profile' });
   }
 });
 

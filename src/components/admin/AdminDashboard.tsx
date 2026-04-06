@@ -171,18 +171,30 @@ const AdminDashboard: React.FC<Props> = ({ onLogout, adminUser }) => {
     }
   };
 
-  const handleDeleteProfile = async (profileId: string) => {
+  const handleDeleteProfile = async (profileId: string | undefined) => {
+    if (!profileId) {
+      console.warn('Profile ID missing. Delete skipped.');
+      return;
+    }
+
     if (window.confirm('Are you sure you want to delete this profile?')) {
       try {
         const response = await fetch(`${API_URL}/api/profiles/${profileId}`, {
           method: 'DELETE'
         });
+        
+        const data = await response.json();
+        console.log('Delete response:', data);
+
         if (response.ok) {
           alert('Profile deleted successfully!');
           fetchAdminData();
+        } else {
+          alert(`Failed to delete profile: ${data.error || 'Unknown error'}`);
         }
-      } catch (error) {
-        console.error('Error deleting profile:', error);
+      } catch (err) {
+        console.error('Failed to delete profile:', err);
+        alert('Error deleting profile');
       }
     }
   };
