@@ -188,11 +188,19 @@ app.get('/api/profiles', async (req, res) => {
 
 // Get profiles by user ID
 app.get('/api/profiles/user/:userId', async (req, res) => {
+  const userId = req.params.userId;
+
+  // Safety check: skip invalid IDs or admin-system-id
+  if (userId === 'admin-system-id' || !mongoose.Types.ObjectId.isValid(userId)) {
+    return res.json([]); // return empty array instead of crashing
+  }
+
   try {
-    const profiles = await Profile.find({ userId: req.params.userId }).sort({ createdAt: -1 });
+    const profiles = await Profile.find({ userId }).sort({ createdAt: -1 });
     res.json(profiles);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error('Error fetching profiles:', err);
+    res.status(500).json({ error: 'Failed to fetch profiles' });
   }
 });
 
@@ -239,11 +247,19 @@ app.get('/api/interviews', async (req, res) => {
 
 // GET interviews by user ID
 app.get('/api/interviews/user/:userId', async (req, res) => {
+  const userId = req.params.userId;
+
+  // Safety check: skip invalid IDs or admin-system-id
+  if (userId === 'admin-system-id' || !mongoose.Types.ObjectId.isValid(userId)) {
+    return res.json([]); // return empty array instead of crashing
+  }
+
   try {
-    const interviews = await Interview.find({ userId: req.params.userId }).sort({ date: -1 });
+    const interviews = await Interview.find({ userId }).sort({ date: -1 });
     res.json(interviews);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error('Error fetching interviews:', err);
+    res.status(500).json({ error: 'Failed to fetch interviews' });
   }
 });
 
