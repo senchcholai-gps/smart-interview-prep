@@ -253,7 +253,7 @@ const Dashboard: React.FC<Props> = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {jobProfiles.map((profile) => (
+          {jobProfiles.filter(p => p.jobRole).map((profile) => (
             <div
               key={profile.id}
               className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all overflow-hidden border border-gray-100"

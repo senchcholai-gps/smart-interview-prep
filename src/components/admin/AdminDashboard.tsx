@@ -635,7 +635,7 @@ const AdminDashboard: React.FC<Props> = ({ onLogout, adminUser }) => {
                             <div className="ml-12">
                               <h4 className="font-semibold mb-3 text-gray-700">📋 Profiles for {user.username}</h4>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {user.profiles.map((profile, index) => (
+                                {user.profiles.filter((p: any) => p.jobRole).map((profile, index) => (
                                   <div key={index} className="bg-white p-4 rounded-lg shadow border border-gray-200">
                                     <div className="flex justify-between items-start mb-2">
                                       <h5 className="font-bold text-blue-600">{profile.jobRole}</h5>
@@ -694,7 +694,7 @@ const AdminDashboard: React.FC<Props> = ({ onLogout, adminUser }) => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {allProfiles.map((profile, index) => (
+                  {allProfiles.filter(p => p.jobRole).map((profile, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
@@ -753,7 +753,7 @@ const AdminDashboard: React.FC<Props> = ({ onLogout, adminUser }) => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {interviews.map((interview: any, index) => (
+                  {interviews.filter((i: any) => i.jobRole).map((interview: any, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-6 py-4 font-medium cursor-pointer" onClick={() => handleInterviewClick(interview)}>
                         {interview.userName || 'Unknown'}
