@@ -114,6 +114,33 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
+// DELETE user BY ID
+app.delete('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+
+  // Safety check for invalid user ID
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Invalid user ID' });
+  }
+
+  try {
+    // Delete user
+    const deletedUser = await User.findByIdAndDelete(id);
+    if (!deletedUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Clean up associated data (optional but recommended)
+    await Profile.deleteMany({ userId: id });
+    await Interview.deleteMany({ userId: id });
+
+    res.json({ message: 'User and associated data deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting user:', err);
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
 // ✅ FIXED: Login accepts BOTH email and username
 app.post('/api/login', async (req, res) => {
   try {
@@ -230,10 +257,19 @@ app.delete('/api/profiles/:id', async (req, res) => {
   }
 
   try {
-    const deletedProfile = await Profile.findByIdAndDelete(id);
-    if (!deletedProfile) {
+    const profile = await Profile.findById(id);
+    if (!profile) {
       return res.status(404).json({ error: 'Profile not found' });
     }
+
+    const userId = profile.userId;
+    await Profile.findByIdAndDelete(id);
+
+    // Decrement profile count for the user
+    await User.findByIdAndUpdate(userId, {
+      $inc: { profiles: -1 }
+    });
+
     res.json({ message: 'Profile deleted successfully' });
   } catch (err) {
     console.error('Error deleting profile:', err);
@@ -298,6 +334,36 @@ app.post('/api/interviews', async (req, res) => {
     res.status(201).json(savedInterview);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE interview by ID
+app.delete('/api/interviews/:id', async (req, res) => {
+  const { id } = req.params;
+
+  // Safety check for invalid interview ID
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ error: 'Invalid interview ID' });
+  }
+
+  try {
+    const interview = await Interview.findById(id);
+    if (!interview) {
+      return res.status(404).json({ error: 'Interview not found' });
+    }
+
+    const userId = interview.userId;
+    await Interview.findByIdAndDelete(id);
+
+    // Decrement interview count for the user
+    await User.findByIdAndUpdate(userId, {
+      $inc: { interviews: -1 }
+    });
+
+    res.json({ message: 'Interview deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting interview:', err);
+    res.status(500).json({ error: 'Failed to delete interview' });
   }
 });
 

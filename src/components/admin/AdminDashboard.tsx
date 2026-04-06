@@ -161,12 +161,29 @@ const AdminDashboard: React.FC<Props> = ({ onLogout, adminUser }) => {
     }
   };
 
-  const handleDeleteUser = async (userId: string, username: string) => {
-    if (window.confirm(`Are you sure you want to delete user ${username}? This action cannot be undone.`)) {
+  const handleDeleteUser = async (userId: string | undefined, username: string) => {
+    if (!userId) {
+      console.warn('User ID missing. Delete skipped.');
+      return;
+    }
+
+    if (window.confirm(`Are you sure you want to delete user ${username}? This action cannot be undone and will delete all their profiles and interviews.`)) {
       try {
-        alert('Delete user functionality requires backend DELETE endpoint');
+        const response = await fetch(`${API_URL}/api/users/${userId}`, {
+          method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          alert('User and all associated data deleted successfully!');
+          fetchAdminData();
+        } else {
+          alert(`Failed to delete user: ${data.error || 'Unknown error'}`);
+        }
       } catch (error) {
         console.error('Error deleting user:', error);
+        alert('Error deleting user');
       }
     }
   };
@@ -199,17 +216,25 @@ const AdminDashboard: React.FC<Props> = ({ onLogout, adminUser }) => {
     }
   };
 
-  const handleDeleteInterview = async (interviewId: string) => {
+  const handleDeleteInterview = async (interviewId: string | undefined) => {
+    if (!interviewId) {
+      console.warn('Interview ID missing. Delete skipped.');
+      return;
+    }
+
     if (window.confirm('Are you sure you want to delete this interview?')) {
       try {
         const response = await fetch(`${API_URL}/api/interviews/${interviewId}`, {
           method: 'DELETE'
         });
+        
+        const data = await response.json();
+
         if (response.ok) {
           alert('Interview deleted successfully!');
           fetchAdminData();
         } else {
-          alert('Failed to delete interview');
+          alert(`Failed to delete interview: ${data.error || 'Unknown error'}`);
         }
       } catch (error) {
         console.error('Error deleting interview:', error);
@@ -615,7 +640,7 @@ const AdminDashboard: React.FC<Props> = ({ onLogout, adminUser }) => {
                                     <div className="flex justify-between items-start mb-2">
                                       <h5 className="font-bold text-blue-600">{profile.jobRole}</h5>
                                       <button
-                                        onClick={() => handleDeleteProfile(profile.id)}
+                                        onClick={() => handleDeleteProfile(profile.id || profile._id)}
                                         className="text-red-400 hover:text-red-600 text-sm"
                                       >
                                         ✕
@@ -693,7 +718,7 @@ const AdminDashboard: React.FC<Props> = ({ onLogout, adminUser }) => {
                       <td className="px-6 py-4 text-sm">{new Date(profile.createdAt).toLocaleDateString()}</td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => handleDeleteProfile(profile._id)}
+                          onClick={() => handleDeleteProfile(profile._id || profile.id)}
                           className="text-red-500 hover:text-red-700"
                           title="Delete Profile"
                         >
@@ -764,7 +789,7 @@ const AdminDashboard: React.FC<Props> = ({ onLogout, adminUser }) => {
                       </td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => handleDeleteInterview(interview._id)}
+                          onClick={() => handleDeleteInterview(interview._id || interview.id)}
                           className="text-red-500 hover:text-red-700 transition-colors"
                           title="Delete Interview"
                         >
